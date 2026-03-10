@@ -11,20 +11,21 @@ const categories = [
 ];
 
 interface CategoryButtonsProps {
-  onSelect: (query: string) => void;
+  onSelect: (query: string, category: string) => void;
   disabled?: boolean;
+  activeCategory?: string;
 }
 
-export function CategoryButtons({ onSelect, disabled }: CategoryButtonsProps) {
+export function CategoryButtons({ onSelect, disabled, activeCategory }: CategoryButtonsProps) {
   return (
     <div className="flex flex-wrap gap-2 justify-center">
       {categories.map((cat) => (
         <Button
           key={cat.label}
-          variant="category"
+          variant={activeCategory === cat.label ? "default" : "category"}
           size="sm"
           disabled={disabled}
-          onClick={() => onSelect(cat.query)}
+          onClick={() => onSelect(cat.query, cat.label)}
           className="gap-2"
         >
           <cat.icon className="size-4" />
