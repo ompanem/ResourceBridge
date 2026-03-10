@@ -142,6 +142,38 @@ serve(async (req) => {
       });
     }
 
+    // Validate links in parallel — remove resources with broken URLs
+    if (parsed.resources && Array.isArray(parsed.resources)) {
+      const validated = await Promise.all(
+        parsed.resources.map(async (r: { link?: string; name?: string }) => {
+          if (!r.link || !r.link.startsWith("https://")) return null;
+          try {
+            const check = await fetch(r.link, {
+              method: "HEAD",
+              redirect: "follow",
+              signal: AbortSignal.timeout(5000),
+            });
+            if (check.status < 400) return r;
+            // Some servers block HEAD — retry with GET
+            if (check.status === 405) {
+              const getCheck = await fetch(r.link, {
+                method: "GET",
+                redirect: "follow",
+                signal: AbortSignal.timeout(5000),
+              });
+              if (getCheck.status < 400) return r;
+            }
+            console.warn(`Link failed: ${r.name} — ${r.link} (${check.status})`);
+            return null;
+          } catch (err) {
+            console.warn(`Link error: ${r.name} — ${r.link}`, err);
+            return null;
+          }
+        })
+      );
+      parsed.resources = validated.filter(Boolean);
+    }
+
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
