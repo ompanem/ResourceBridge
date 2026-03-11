@@ -50,6 +50,7 @@ const Index = () => {
         city: formData.city || undefined,
         category: formData.category || undefined,
         simplifyLanguage: formData.simplifyLanguage,
+        urgent: formData.urgent,
       });
 
       setMessages((prev) =>
@@ -64,8 +65,8 @@ const Index = () => {
   };
 
   const handleToggleSave = (resource: Resource, situationSummary: string) => {
-    if (isSaved(resource.name, resource.link)) {
-      removeResource(resource.name, resource.link);
+    if (isSaved(resource.name, resource.link || "")) {
+      removeResource(resource.name, resource.link || "");
       toast.info("Resource removed");
     } else {
       saveResource(resource, situationSummary);

@@ -5,7 +5,9 @@ export interface Resource {
   description: string;
   whyThisHelps: string;
   locationRelevance: string;
-  link: string;
+  relevanceLevel: "Local" | "Statewide" | "National" | "Online";
+  whatYouMayNeed: string[];
+  link: string | null;
 }
 
 export interface AIResponse {

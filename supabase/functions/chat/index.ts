@@ -19,7 +19,9 @@ Rules:
 - No markdown links, no partial URLs, no fake placeholders
 - If exact local resources are uncertain, provide reputable statewide or national organizations and say so clearly
 - Your tone should be supportive, simple, and practical
-- Focus on actionable information`;
+- Focus on actionable information
+- For each resource, classify relevanceLevel as exactly one of: "Local", "Statewide", "National", or "Online"
+- For each resource, include whatYouMayNeed: a short array of 2-5 practical items (documents, info) a person typically needs when applying or contacting this resource. If unsure, list common/likely requirements. Examples: "Photo ID", "Proof of income", "Proof of address", "Social Security number".`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -27,7 +29,7 @@ serve(async (req) => {
   }
 
   try {
-    const { situation, state, city, category, simplifyLanguage } = await req.json();
+    const { situation, state, city, category, simplifyLanguage, urgent } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -40,6 +42,9 @@ serve(async (req) => {
     }
     if (simplifyLanguage) {
       systemContent += `\n\nIMPORTANT: Use very simple words, short sentences, and a 5th-grade reading level. Avoid jargon and complex terms. Be extra clear and direct.`;
+    }
+    if (urgent) {
+      systemContent += `\n\nURGENT MODE: The user needs help RIGHT NOW. Prioritize resources that offer immediate assistance: crisis hotlines, emergency services, same-day help, walk-in services, 24/7 resources, emergency food pantries, emergency shelters, and urgent legal/medical hotlines. Put the most immediately accessible resources first.`;
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -74,9 +79,11 @@ serve(async (req) => {
                         description: { type: "string" },
                         whyThisHelps: { type: "string" },
                         locationRelevance: { type: "string" },
+                        relevanceLevel: { type: "string", enum: ["Local", "Statewide", "National", "Online"], description: "How location-specific this resource is." },
+                        whatYouMayNeed: { type: "array", items: { type: "string" }, description: "Short list of documents or info typically needed (2-5 items)." },
                         link: { type: "string", description: "Full absolute URL starting with https://" },
                       },
-                      required: ["name", "category", "description", "whyThisHelps", "locationRelevance", "link"],
+                      required: ["name", "category", "description", "whyThisHelps", "locationRelevance", "relevanceLevel", "whatYouMayNeed", "link"],
                       additionalProperties: false,
                     },
                   },
@@ -142,18 +149,25 @@ serve(async (req) => {
       });
     }
 
-    // Validate links in parallel — remove resources with broken URLs
+    // Validate links in parallel — set link to null for broken URLs instead of removing resource
     if (parsed.resources && Array.isArray(parsed.resources)) {
-      const validated = await Promise.all(
-        parsed.resources.map(async (r: { link?: string; name?: string }) => {
-          if (!r.link || !r.link.startsWith("https://")) return null;
+      await Promise.all(
+        parsed.resources.map(async (r: { link?: string | null; name?: string; relevanceLevel?: string; whatYouMayNeed?: string[] }) => {
+          // Ensure new fields have defaults
+          if (!r.relevanceLevel) r.relevanceLevel = "National";
+          if (!Array.isArray(r.whatYouMayNeed)) r.whatYouMayNeed = [];
+
+          if (!r.link || !r.link.startsWith("https://")) {
+            r.link = null;
+            return;
+          }
           try {
             const check = await fetch(r.link, {
               method: "HEAD",
               redirect: "follow",
               signal: AbortSignal.timeout(5000),
             });
-            if (check.status < 400) return r;
+            if (check.status < 400) return;
             // Some servers block HEAD — retry with GET
             if (check.status === 405) {
               const getCheck = await fetch(r.link, {
@@ -161,17 +175,16 @@ serve(async (req) => {
                 redirect: "follow",
                 signal: AbortSignal.timeout(5000),
               });
-              if (getCheck.status < 400) return r;
+              if (getCheck.status < 400) return;
             }
             console.warn(`Link failed: ${r.name} — ${r.link} (${check.status})`);
-            return null;
+            r.link = null;
           } catch (err) {
             console.warn(`Link error: ${r.name} — ${r.link}`, err);
-            return null;
+            r.link = null;
           }
         })
       );
-      parsed.resources = validated.filter(Boolean);
     }
 
     return new Response(JSON.stringify(parsed), {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, Languages } from "lucide-react";
+import { ArrowUp, Languages, AlertTriangle } from "lucide-react";
 import { US_STATES } from "@/lib/us-states";
 import { CategoryButtons } from "@/components/CategoryButtons";
 
@@ -10,6 +10,7 @@ export interface SearchFormData {
   city: string;
   category: string;
   simplifyLanguage: boolean;
+  urgent: boolean;
 }
 
 interface SearchFormProps {
@@ -23,12 +24,13 @@ export function SearchForm({ onSubmit, disabled }: SearchFormProps) {
   const [city, setCity] = useState("");
   const [category, setCategory] = useState("");
   const [simplify, setSimplify] = useState(false);
+  const [urgent, setUrgent] = useState(false);
 
   const canSubmit = situation.trim().length > 0 && state.length > 0 && !disabled;
 
   const handleSubmit = () => {
     if (!canSubmit) return;
-    onSubmit({ situation: situation.trim(), state, city: city.trim(), category, simplifyLanguage: simplify });
+    onSubmit({ situation: situation.trim(), state, city: city.trim(), category, simplifyLanguage: simplify, urgent });
     setSituation("");
     setCategory("");
   };
@@ -99,6 +101,22 @@ export function SearchForm({ onSubmit, disabled }: SearchFormProps) {
           >
             <Languages className="size-3.5" />
             {simplify ? "Simple" : "Simplify"}
+          </button>
+
+          {/* Urgent toggle */}
+          <button
+            type="button"
+            onClick={() => setUrgent(!urgent)}
+            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-colors font-heading ${
+              urgent
+                ? "border-destructive text-destructive bg-destructive/5"
+                : "border-border text-muted-foreground hover:text-foreground"
+            }`}
+            title="Toggle urgency mode"
+            aria-label="Toggle urgency mode"
+          >
+            <AlertTriangle className="size-3.5" />
+            {urgent ? "Urgent" : "Urgent"}
           </button>
 
           <div className="flex-1" />
