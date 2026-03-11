@@ -1,4 +1,4 @@
-import { Bookmark, BookmarkCheck, ExternalLink, Copy, Check, ClipboardList } from "lucide-react";
+import { Bookmark, BookmarkCheck, ExternalLink, Copy, Check, ClipboardList, Zap, Clock, CalendarClock, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import type { Resource } from "@/types/resources";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,13 @@ const relevanceBadgeStyles: Record<string, string> = {
   Online: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
 };
 
+const urgencyConfig: Record<string, { style: string; icon: typeof Zap }> = {
+  "Immediate Help": { style: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20", icon: Zap },
+  "Same-Day Help": { style: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20", icon: Clock },
+  "Short-Term Support": { style: "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/20", icon: CalendarClock },
+  "Long-Term Support": { style: "bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20", icon: TrendingUp },
+};
+
 export function ResourceCard({ resource, isSaved, onToggleSave }: ResourceCardProps) {
   const [copied, setCopied] = useState(false);
 
@@ -30,6 +37,8 @@ export function ResourceCard({ resource, isSaved, onToggleSave }: ResourceCardPr
   };
 
   const badgeStyle = relevanceBadgeStyles[resource.relevanceLevel] || "";
+  const urgency = resource.urgencyLevel ? urgencyConfig[resource.urgencyLevel] : null;
+  const UrgencyIcon = urgency?.icon;
 
   return (
     <div className="rounded-xl border border-border bg-card p-5 space-y-3 animate-fade-in">
@@ -41,6 +50,12 @@ export function ResourceCard({ resource, isSaved, onToggleSave }: ResourceCardPr
             {resource.relevanceLevel && (
               <span className={`inline-flex items-center text-[11px] font-heading font-semibold px-2 py-0.5 rounded-full border ${badgeStyle}`}>
                 {resource.relevanceLevel}
+              </span>
+            )}
+            {resource.urgencyLevel && urgency && UrgencyIcon && (
+              <span className={`inline-flex items-center gap-1 text-[11px] font-heading font-semibold px-2 py-0.5 rounded-full border ${urgency.style}`}>
+                <UrgencyIcon className="size-3" />
+                {resource.urgencyLevel}
               </span>
             )}
           </div>
