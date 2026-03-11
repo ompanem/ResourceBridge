@@ -1,6 +1,6 @@
 import type { AIResponse, Resource } from "@/types/resources";
 import { ResourceCard } from "@/components/ResourceCard";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, AlertTriangle } from "lucide-react";
 
 interface AIResponseCardProps {
   data: AIResponse;
@@ -16,6 +16,17 @@ export function AIResponseCard({ data, isSaved, onToggleSave }: AIResponseCardPr
         <h3 className="font-heading font-semibold text-foreground text-sm mb-1">Situation Summary</h3>
         <p className="font-body text-foreground text-[15px] leading-relaxed">{data.situationSummary}</p>
       </div>
+
+      {/* Start Here — urgent callout */}
+      {data.startHere && (
+        <div className="rounded-xl border-2 border-destructive/30 bg-destructive/5 p-5 flex gap-3 items-start">
+          <AlertTriangle className="size-5 text-destructive flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="font-heading font-bold text-destructive text-sm mb-1">Start Here</h3>
+            <p className="font-body text-foreground text-[15px] leading-relaxed">{data.startHere}</p>
+          </div>
+        </div>
+      )}
 
       {/* Resources */}
       <div className="space-y-3">
