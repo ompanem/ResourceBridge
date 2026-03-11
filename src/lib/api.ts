@@ -8,6 +8,7 @@ export interface ChatRequest {
   city?: string;
   category?: string;
   simplifyLanguage?: boolean;
+  urgent?: boolean;
 }
 
 /**

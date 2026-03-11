@@ -24,7 +24,7 @@ export function AIResponseCard({ data, isSaved, onToggleSave }: AIResponseCardPr
           <ResourceCard
             key={`${r.name}-${i}`}
             resource={r}
-            isSaved={isSaved(r.name, r.link)}
+            isSaved={isSaved(r.name, r.link || "")}
             onToggleSave={() => onToggleSave(r)}
           />
         ))}

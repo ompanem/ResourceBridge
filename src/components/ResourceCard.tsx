@@ -1,4 +1,4 @@
-import { Bookmark, BookmarkCheck, ExternalLink, Copy, Check } from "lucide-react";
+import { Bookmark, BookmarkCheck, ExternalLink, Copy, Check, ClipboardList } from "lucide-react";
 import { useState } from "react";
 import type { Resource } from "@/types/resources";
 import { Badge } from "@/components/ui/badge";
@@ -11,23 +11,39 @@ interface ResourceCardProps {
   onToggleSave: () => void;
 }
 
+const relevanceBadgeStyles: Record<string, string> = {
+  Local: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
+  Statewide: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
+  National: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20",
+  Online: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
+};
+
 export function ResourceCard({ resource, isSaved, onToggleSave }: ResourceCardProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    const text = `${resource.name}\n${resource.description}\n${resource.link}`;
+    const text = `${resource.name}\n${resource.description}${resource.link ? `\n${resource.link}` : ""}`;
     await navigator.clipboard.writeText(text);
     setCopied(true);
     toast.success("Copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const badgeStyle = relevanceBadgeStyles[resource.relevanceLevel] || "";
+
   return (
     <div className="rounded-xl border border-border bg-card p-5 space-y-3 animate-fade-in">
       <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1 min-w-0">
+        <div className="space-y-1.5 min-w-0">
           <h3 className="font-heading font-semibold text-foreground text-base leading-tight">{resource.name}</h3>
-          <Badge variant="secondary" className="text-xs font-heading">{resource.category}</Badge>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge variant="secondary" className="text-xs font-heading">{resource.category}</Badge>
+            {resource.relevanceLevel && (
+              <span className={`inline-flex items-center text-[11px] font-heading font-semibold px-2 py-0.5 rounded-full border ${badgeStyle}`}>
+                {resource.relevanceLevel}
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           <Button variant="ghost" size="icon" className="size-8" onClick={handleCopy} aria-label="Copy resource">
@@ -52,14 +68,37 @@ export function ResourceCard({ resource, isSaved, onToggleSave }: ResourceCardPr
         </p>
       </div>
 
-      <a
-        href={resource.link}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 text-sm font-heading font-medium text-primary hover:text-primary/80 transition-colors"
-      >
-        Visit website <ExternalLink className="size-3.5" />
-      </a>
+      {/* What You May Need */}
+      {resource.whatYouMayNeed && resource.whatYouMayNeed.length > 0 && (
+        <div className="rounded-lg bg-secondary/50 px-4 py-3 space-y-1.5">
+          <p className="flex items-center gap-1.5 font-heading font-medium text-foreground text-xs">
+            <ClipboardList className="size-3.5" />
+            What you may need
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {resource.whatYouMayNeed.map((item, i) => (
+              <span key={i} className="text-[11px] font-heading bg-background text-muted-foreground rounded-md px-2 py-0.5 border border-border">
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {resource.link ? (
+        <a
+          href={resource.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm font-heading font-medium text-primary hover:text-primary/80 transition-colors"
+        >
+          Visit website <ExternalLink className="size-3.5" />
+        </a>
+      ) : (
+        <span className="inline-flex items-center gap-1.5 text-sm font-heading text-muted-foreground">
+          Official site unavailable
+        </span>
+      )}
     </div>
   );
 }

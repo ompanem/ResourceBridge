@@ -50,6 +50,7 @@ const Index = () => {
         city: formData.city || undefined,
         category: formData.category || undefined,
         simplifyLanguage: formData.simplifyLanguage,
+        urgent: formData.urgent,
       });
 
       setMessages((prev) =>
