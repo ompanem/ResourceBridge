@@ -44,7 +44,17 @@ serve(async (req) => {
       systemContent += `\n\nIMPORTANT: Use very simple words, short sentences, and a 5th-grade reading level. Avoid jargon and complex terms. Be extra clear and direct.`;
     }
     if (urgent) {
-      systemContent += `\n\nURGENT MODE: The user needs help RIGHT NOW. Prioritize resources that offer immediate assistance: crisis hotlines, emergency services, same-day help, walk-in services, 24/7 resources, emergency food pantries, emergency shelters, and urgent legal/medical hotlines. Put the most immediately accessible resources first.`;
+      systemContent += `\n\nURGENT MODE — CRITICAL PRIORITY RULES:
+- The user needs help RIGHT NOW, today, or within 24 hours.
+- ONLY recommend resources that can provide immediate or same-day assistance. Avoid programs that require lengthy applications, waiting lists, or multi-step approval processes.
+- Prioritize in this order:
+  1. Crisis hotlines and 24/7 helplines (e.g. 211, 988, National Domestic Violence Hotline)
+  2. Walk-in services available today (emergency food pantries, drop-in shelters, urgent care clinics)
+  3. Same-day or next-day appointment services
+  4. Emergency government programs with expedited processing
+- Put the fastest-to-access resources FIRST in the list.
+- For each resource, mention in the description how quickly help is available (e.g. "Call now for immediate support", "Walk-in hours today", "Same-day assistance available").
+- If a local same-day option exists, always prefer it over a national program with a longer process.`;
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
