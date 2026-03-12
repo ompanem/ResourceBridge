@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { fetchResources } from "@/lib/api";
 import { SearchForm, type SearchFormData } from "@/components/SearchForm";
 import { AIResponseCard } from "@/components/AIResponseCard";
+import { GuidanceCard } from "@/components/GuidanceCard";
 import { SavedResourcesPanel } from "@/components/SavedResourcesPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -22,6 +23,7 @@ const Index = () => {
   const { saved, saveResource, removeResource, isSaved } = useSavedResources();
   const { dark, toggle: toggleTheme } = useTheme();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const searchFormRef = useRef<{ setSituation: (v: string) => void } | null>(null);
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -72,6 +74,10 @@ const Index = () => {
       saveResource(resource, situationSummary);
       toast.success("Resource saved");
     }
+  };
+
+  const handleSuggestedPromptClick = (prompt: string) => {
+    searchFormRef.current?.setSituation(prompt);
   };
 
   const hasMessages = messages.length > 0;
@@ -141,12 +147,28 @@ const Index = () => {
                   );
                 }
                 if (msg.data) {
+                  const mode = msg.data.mode;
+                  if (mode === "guidance" || mode === "clarification") {
+                    return (
+                      <div key={msg.id}>
+                        <GuidanceCard data={msg.data} onPromptClick={handleSuggestedPromptClick} />
+                      </div>
+                    );
+                  }
+                  if (mode === "error") {
+                    return (
+                      <div key={msg.id}>
+                        <GuidanceCard data={msg.data} onPromptClick={handleSuggestedPromptClick} />
+                      </div>
+                    );
+                  }
+                  // mode === "resources"
                   return (
                     <div key={msg.id}>
                       <AIResponseCard
                         data={msg.data}
                         isSaved={isSaved}
-                        onToggleSave={(r) => handleToggleSave(r, msg.data!.situationSummary)}
+                        onToggleSave={(r) => handleToggleSave(r, msg.data!.situationSummary || "")}
                       />
                     </div>
                   );
@@ -161,7 +183,7 @@ const Index = () => {
       {/* Input */}
       <div className="flex-shrink-0 border-t border-border bg-background/80 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto px-5 md:px-8 py-4">
-          <SearchForm onSubmit={handleSubmit} disabled={isLoading} />
+          <SearchForm ref={searchFormRef} onSubmit={handleSubmit} disabled={isLoading} />
         </div>
       </div>
 

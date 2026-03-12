@@ -24,6 +24,8 @@ RESOURCE RULES:
   - When in doubt, use the homepage rather than a specific subpage
 - No markdown, no partial URLs, no fake placeholders.
 - If exact local resources are uncertain, provide reputable statewide or national organizations and say so.
+- Prefer real, official organizations: government agencies, established nonprofits, schools, known service directories.
+- Never fabricate organizations. If confidence is low, use broader but real resources and explain the limitation in locationRelevance.
 
 FIELD RULES:
 - relevanceLevel: exactly one of "Local", "Statewide", "National", or "Online"
@@ -33,7 +35,125 @@ FIELD RULES:
   - "Short-Term Support" = programs available within days/weeks, food banks, distribution events
   - "Long-Term Support" = SNAP, housing programs, training programs requiring applications
 - whatYouMayNeed: 2–5 short phrases. Use simple language. Add "(if available)" when requirements vary. Examples: "Photo ID", "Proof of residency (utility bill or lease)", "Proof of income (if available)"
-- nextSteps: exactly 3 numbered action items. Each should be a clear, specific instruction. When urgent, emphasize immediate actions first. Example: "1. Call 2-1-1 to find food pantries open today in your area."`;
+- nextSteps: exactly 3 numbered action items. Each should be a clear, specific instruction. When urgent, emphasize immediate actions first.
+
+INTENT CLASSIFICATION — CRITICAL:
+Before generating resources, classify the user's input:
+- HELP_REQUEST: user is clearly asking for help with real-life needs (food, housing, scholarships, jobs, legal help, mental health, education, etc.)
+- NON_HELP_REQUEST: user is asking something unrelated (math, trivia, jokes, general chat, random questions)
+- TOO_VAGUE: input is too short or unclear (e.g. "help", "idk", "something for school")
+
+If NON_HELP_REQUEST: use the "provide_guidance" tool.
+If TOO_VAGUE: use the "request_clarification" tool.
+If HELP_REQUEST: use the "provide_resources" tool.
+
+NEVER invent a support need if the user did not describe one. NEVER reinterpret unrelated questions as requests for aid.`;
+
+function buildTools(urgent: boolean) {
+  const resourceSchema = {
+    type: "object",
+    properties: {
+      name: { type: "string" },
+      category: { type: "string" },
+      description: { type: "string", description: "Clear description. For urgent resources, mention how quickly help is available." },
+      whyThisHelps: { type: "string" },
+      locationRelevance: { type: "string" },
+      relevanceLevel: { type: "string", enum: ["Local", "Statewide", "National", "Online"] },
+      urgencyLevel: { type: "string", enum: ["Immediate Help", "Same-Day Help", "Short-Term Support", "Long-Term Support"] },
+      whatYouMayNeed: { type: "array", items: { type: "string" }, description: "2-5 short phrases. Simple language. Add '(if available)' when uncertain." },
+      link: { type: "string", description: "Full absolute URL starting with https://" },
+    },
+    required: ["name", "category", "description", "whyThisHelps", "locationRelevance", "relevanceLevel", "urgencyLevel", "whatYouMayNeed", "link"],
+    additionalProperties: false,
+  };
+
+  return [
+    {
+      type: "function",
+      function: {
+        name: "provide_resources",
+        description: "Return structured resource recommendations when the user has a clear help request.",
+        parameters: {
+          type: "object",
+          properties: {
+            situationSummary: { type: "string", description: "Warm, conversational summary referencing the user's situation directly. Use 'you' and 'your'. 1-2 sentences." },
+            startHere: { type: ["string", "null"], description: urgent ? "One clear sentence with the #1 immediate action to take right now." : "Must be null for non-urgent requests." },
+            resources: { type: "array", items: resourceSchema },
+            nextSteps: { type: "array", items: { type: "string" }, description: "Exactly 3 numbered action items." },
+          },
+          required: ["situationSummary", "startHere", "resources", "nextSteps"],
+          additionalProperties: false,
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "provide_guidance",
+        description: "Return a friendly message when the user input is not a help request. Include suggested prompts.",
+        parameters: {
+          type: "object",
+          properties: {
+            message: { type: "string", description: "Friendly message explaining what ResourceBridge does and how the user can get help." },
+            suggestedPrompts: { type: "array", items: { type: "string" }, description: "4 example prompts the user could try." },
+          },
+          required: ["message", "suggestedPrompts"],
+          additionalProperties: false,
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "request_clarification",
+        description: "Ask the user to provide more detail when input is too vague.",
+        parameters: {
+          type: "object",
+          properties: {
+            message: { type: "string", description: "Friendly message asking for more detail." },
+            suggestedPrompts: { type: "array", items: { type: "string" }, description: "4 example prompts the user could try." },
+          },
+          required: ["message", "suggestedPrompts"],
+          additionalProperties: false,
+        },
+      },
+    },
+  ];
+}
+
+async function validateLink(link: string | null | undefined): Promise<{ url: string | null; verified: boolean }> {
+  if (!link || !link.startsWith("https://")) return { url: null, verified: false };
+  try {
+    const check = await fetch(link, { method: "HEAD", redirect: "follow", signal: AbortSignal.timeout(5000) });
+    if (check.status < 400) return { url: link, verified: true };
+    if (check.status === 405) {
+      const getCheck = await fetch(link, { method: "GET", redirect: "follow", signal: AbortSignal.timeout(5000) });
+      if (getCheck.status < 400) return { url: link, verified: true };
+    }
+    console.warn(`Link failed: ${link} (${check.status})`);
+    return { url: null, verified: false };
+  } catch (err) {
+    console.warn(`Link error: ${link}`, err);
+    return { url: null, verified: false };
+  }
+}
+
+function safeFallback(mode: "guidance" | "clarification" | "error", message: string, prompts: string[] = []) {
+  return {
+    mode,
+    message,
+    situationSummary: null,
+    startHere: null,
+    resources: [],
+    nextSteps: [],
+    suggestedPrompts: prompts.length > 0 ? prompts : [
+      "My family needs groceries",
+      "I'm looking for scholarships",
+      "I need mental health support",
+      "I need job training near me",
+    ],
+  };
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -45,7 +165,14 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    let userPrompt = situation || "";
+    // Empty input check
+    if (!situation || !situation.trim()) {
+      return new Response(JSON.stringify(safeFallback("clarification", "Please describe your situation so we can find the right resources for you.")), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let userPrompt = situation.trim();
     if (category) userPrompt += `\nCategory focus: ${category}`;
 
     let systemContent = SYSTEM_PROMPT;
@@ -58,47 +185,20 @@ serve(async (req) => {
     if (urgent) {
       systemContent += `\n\nURGENT MODE — CRITICAL:
 - The user needs help RIGHT NOW, today, or within 24 hours.
-- You MUST provide a "startHere" field: a single clear sentence telling the user the #1 immediate action to take right now. Example: "Call 2-1-1 right now to speak with a specialist who can locate food pantries open today in your area."
+- You MUST provide a "startHere" field: a single clear sentence telling the user the #1 immediate action to take right now.
 - Order resources by speed of access:
   Priority 1: Immediate contact — 24/7 hotlines, crisis lines (urgencyLevel: "Immediate Help")
   Priority 2: Same-day walk-in services — food pantries, shelters, clinics (urgencyLevel: "Same-Day Help")
   Priority 3: Short-term regional programs — food banks, distribution events (urgencyLevel: "Short-Term Support")
   Priority 4: Long-term application-based programs — SNAP, housing (urgencyLevel: "Long-Term Support")
-- For each resource, mention in the description HOW QUICKLY help is available (e.g. "Available 24/7", "Walk-in hours Mon-Fri 9am-4pm", "Same-day assistance").
+- For each resource, mention in the description HOW QUICKLY help is available.
 - Prefer local same-day options over national programs with longer processes.
 - nextSteps should focus on what to do RIGHT NOW.`;
     } else {
       systemContent += `\n\nSet startHere to null since this is not an urgent request.`;
     }
 
-    const toolParams: Record<string, unknown> = {
-      situationSummary: { type: "string", description: "Warm, conversational summary referencing the user's situation directly. Use 'you' and 'your'. 1-2 sentences." },
-      startHere: { type: ["string", "null"], description: "If urgent: one clear sentence with the #1 immediate action. If not urgent: null." },
-      resources: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            name: { type: "string" },
-            category: { type: "string" },
-            description: { type: "string", description: "Clear description. For urgent resources, mention how quickly help is available." },
-            whyThisHelps: { type: "string" },
-            locationRelevance: { type: "string" },
-            relevanceLevel: { type: "string", enum: ["Local", "Statewide", "National", "Online"] },
-            urgencyLevel: { type: "string", enum: ["Immediate Help", "Same-Day Help", "Short-Term Support", "Long-Term Support"] },
-            whatYouMayNeed: { type: "array", items: { type: "string" }, description: "2-5 short phrases. Simple language. Add '(if available)' when uncertain." },
-            link: { type: "string", description: "Full absolute URL starting with https://" },
-          },
-          required: ["name", "category", "description", "whyThisHelps", "locationRelevance", "relevanceLevel", "urgencyLevel", "whatYouMayNeed", "link"],
-          additionalProperties: false,
-        },
-      },
-      nextSteps: {
-        type: "array",
-        items: { type: "string" },
-        description: "Exactly 3 numbered action items. Clear, specific instructions. Start each with a number and period.",
-      },
-    };
+    const tools = buildTools(!!urgent);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -112,22 +212,8 @@ serve(async (req) => {
           { role: "system", content: systemContent },
           { role: "user", content: userPrompt },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "provide_resources",
-              description: "Return structured resource recommendations for the user's situation.",
-              parameters: {
-                type: "object",
-                properties: toolParams,
-                required: ["situationSummary", "startHere", "resources", "nextSteps"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "provide_resources" } },
+        tools,
+        tool_choice: "auto",
       }),
     });
 
@@ -144,22 +230,17 @@ serve(async (req) => {
       }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
-      return new Response(JSON.stringify({ error: "AI gateway error" }), {
+      return new Response(JSON.stringify(safeFallback("error", "We couldn't generate resource suggestions right now. Please try again.")), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const result = await response.json();
-
     const toolCall = result.choices?.[0]?.message?.tool_calls?.[0];
+
     if (!toolCall?.function?.arguments) {
       console.error("No tool call in response:", JSON.stringify(result));
-      return new Response(JSON.stringify({
-        situationSummary: "We found some resources that may help.",
-        startHere: null,
-        resources: [],
-        nextSteps: ["Please try rephrasing your request for better results."],
-      }), {
+      return new Response(JSON.stringify(safeFallback("error", "We couldn't generate resource suggestions right now. Please try again.")), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -169,20 +250,55 @@ serve(async (req) => {
       parsed = JSON.parse(toolCall.function.arguments);
     } catch {
       console.error("Failed to parse tool call arguments:", toolCall.function.arguments);
+      return new Response(JSON.stringify(safeFallback("error", "We couldn't process the response. Please try again.")), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const fnName = toolCall.function.name;
+
+    // Handle non-resource modes
+    if (fnName === "provide_guidance") {
       return new Response(JSON.stringify({
-        situationSummary: "We found some resources that may help.",
+        mode: "guidance",
+        message: parsed.message || "ResourceBridge helps you find free support programs. Try describing a situation where you need help.",
+        situationSummary: null,
         startHere: null,
         resources: [],
-        nextSteps: ["Please try again with more detail about your situation."],
+        nextSteps: [],
+        suggestedPrompts: Array.isArray(parsed.suggestedPrompts) ? parsed.suggestedPrompts : [
+          "My family needs groceries",
+          "I'm looking for scholarships",
+          "I need mental health support",
+          "I need job training near me",
+        ],
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Ensure startHere has a default
+    if (fnName === "request_clarification") {
+      return new Response(JSON.stringify({
+        mode: "clarification",
+        message: parsed.message || "Please share a little more about your situation so we can suggest the right resources.",
+        situationSummary: null,
+        startHere: null,
+        resources: [],
+        nextSteps: [],
+        suggestedPrompts: Array.isArray(parsed.suggestedPrompts) ? parsed.suggestedPrompts : [
+          "My family needs groceries",
+          "I'm looking for scholarships",
+          "I need mental health support",
+          "I need job training near me",
+        ],
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Resources mode — validate and enrich
     if (parsed.startHere === undefined) parsed.startHere = null;
 
-    // Validate links in parallel — set link to null for broken URLs
     if (parsed.resources && Array.isArray(parsed.resources)) {
       await Promise.all(
         parsed.resources.map(async (r: Record<string, unknown>) => {
@@ -190,43 +306,28 @@ serve(async (req) => {
           if (!r.urgencyLevel) r.urgencyLevel = "Long-Term Support";
           if (!Array.isArray(r.whatYouMayNeed)) r.whatYouMayNeed = [];
 
-          const link = r.link as string | null | undefined;
-          if (!link || !link.startsWith("https://")) {
-            r.link = null;
-            return;
-          }
-          try {
-            const check = await fetch(link, {
-              method: "HEAD",
-              redirect: "follow",
-              signal: AbortSignal.timeout(5000),
-            });
-            if (check.status < 400) return;
-            if (check.status === 405) {
-              const getCheck = await fetch(link, {
-                method: "GET",
-                redirect: "follow",
-                signal: AbortSignal.timeout(5000),
-              });
-              if (getCheck.status < 400) return;
-            }
-            console.warn(`Link failed: ${r.name} — ${link} (${check.status})`);
-            r.link = null;
-          } catch (err) {
-            console.warn(`Link error: ${r.name} — ${link}`, err);
-            r.link = null;
-          }
+          const { url, verified } = await validateLink(r.link as string | null | undefined);
+          r.link = url;
+          r.isVerifiedLink = verified;
         })
       );
     }
 
-    return new Response(JSON.stringify(parsed), {
+    return new Response(JSON.stringify({
+      mode: "resources",
+      message: null,
+      situationSummary: parsed.situationSummary || null,
+      startHere: parsed.startHere || null,
+      resources: Array.isArray(parsed.resources) ? parsed.resources : [],
+      nextSteps: Array.isArray(parsed.nextSteps) ? parsed.nextSteps : [],
+      suggestedPrompts: [],
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("chat error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify(safeFallback("error", "We couldn't generate resource suggestions right now. Please try again.")),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

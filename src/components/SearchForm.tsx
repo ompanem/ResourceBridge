@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, Languages, AlertTriangle } from "lucide-react";
 import { US_STATES } from "@/lib/us-states";
@@ -18,13 +18,19 @@ interface SearchFormProps {
   disabled?: boolean;
 }
 
-export function SearchForm({ onSubmit, disabled }: SearchFormProps) {
+export interface SearchFormHandle {
+  setSituation: (v: string) => void;
+}
+
+export const SearchForm = forwardRef<SearchFormHandle, SearchFormProps>(({ onSubmit, disabled }, ref) => {
   const [situation, setSituation] = useState("");
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
   const [category, setCategory] = useState("");
   const [simplify, setSimplify] = useState(false);
   const [urgent, setUrgent] = useState(false);
+
+  useImperativeHandle(ref, () => ({ setSituation }), []);
 
   const canSubmit = situation.trim().length > 0 && state.length > 0 && !disabled;
 
@@ -142,4 +148,6 @@ export function SearchForm({ onSubmit, disabled }: SearchFormProps) {
       />
     </div>
   );
-}
+});
+
+SearchForm.displayName = "SearchForm";

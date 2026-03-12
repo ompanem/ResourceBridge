@@ -13,7 +13,7 @@ export interface ChatRequest {
 
 /**
  * Calls the chat edge function and returns structured JSON.
- * No streaming — we need valid JSON back.
+ * Handles all response modes safely.
  */
 export async function fetchResources(req: ChatRequest): Promise<AIResponse> {
   const resp = await fetch(CHAT_URL, {
@@ -33,10 +33,14 @@ export async function fetchResources(req: ChatRequest): Promise<AIResponse> {
 
   const data = await resp.json();
 
-  // Validate basic shape
-  if (!data.situationSummary || !Array.isArray(data.resources) || !Array.isArray(data.nextSteps)) {
-    throw new Error("Received an unexpected response format. Please try again.");
-  }
-
-  return data as AIResponse;
+  // Normalize to safe defaults
+  return {
+    mode: data.mode || "resources",
+    message: data.message ?? null,
+    situationSummary: data.situationSummary ?? null,
+    startHere: data.startHere ?? null,
+    resources: Array.isArray(data.resources) ? data.resources : [],
+    nextSteps: Array.isArray(data.nextSteps) ? data.nextSteps : [],
+    suggestedPrompts: Array.isArray(data.suggestedPrompts) ? data.suggestedPrompts : [],
+  } as AIResponse;
 }
