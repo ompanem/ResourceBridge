@@ -38,7 +38,7 @@ export const SearchForm = forwardRef<SearchFormHandle, SearchFormProps>(({ onSub
 
   const handleSubmit = () => {
     if (!canSubmit) return;
-    onSubmit({ situation: situation.trim(), state, city: city.trim(), category, simplifyLanguage: simplify, urgent });
+    onSubmit({ situation: situation.trim(), state, city: isNationwide ? "" : city.trim(), category, simplifyLanguage: simplify, urgent });
     setSituation("");
     setCategory("");
   };

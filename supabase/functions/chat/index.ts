@@ -176,7 +176,9 @@ serve(async (req) => {
     if (category) userPrompt += `\nCategory focus: ${category}`;
 
     let systemContent = SYSTEM_PROMPT;
-    if (state) {
+    if (state === "Nationwide (U.S.)" || !state) {
+      systemContent += `\n\nThe user is looking for U.S.-wide, national, federal, or online resources. Do NOT assume a specific state. Prioritize federal programs, national nonprofits, and online services. Only mention a state if the user explicitly named one in their message.`;
+    } else {
       systemContent += `\n\nThe user is located in ${state}${city ? `, ${city}` : ""}. Prioritize local resources in or near this area.`;
     }
     if (simplifyLanguage) {

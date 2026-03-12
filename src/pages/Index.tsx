@@ -137,8 +137,15 @@ const Index = () => {
                 if (msg.role === "user") {
                   return (
                     <div key={msg.id} className="flex justify-end">
-                      <div className="max-w-[85%] md:max-w-[70%] px-5 py-3 rounded-2xl rounded-br-sm bg-primary text-primary-foreground font-heading text-[15px] leading-relaxed">
-                        {msg.content}
+                      <div className="max-w-[85%] md:max-w-[70%]">
+                        <div className="px-5 py-3 rounded-2xl rounded-br-sm bg-primary text-primary-foreground font-heading text-[15px] leading-relaxed">
+                          {msg.content}
+                        </div>
+                        {msg.location && (
+                          <p className="text-[11px] text-muted-foreground font-heading mt-1 text-right pr-1">
+                            📍 {msg.location}
+                          </p>
+                        )}
                       </div>
                     </div>
                   );
