@@ -30,6 +30,8 @@ export const SearchForm = forwardRef<SearchFormHandle, SearchFormProps>(({ onSub
   const [simplify, setSimplify] = useState(false);
   const [urgent, setUrgent] = useState(false);
 
+  const isNationwide = state === NATIONWIDE_OPTION.label;
+
   useImperativeHandle(ref, () => ({ setSituation }), []);
 
   const canSubmit = situation.trim().length > 0 && state.length > 0 && !disabled;
