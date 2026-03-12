@@ -83,13 +83,14 @@ export const SearchForm = forwardRef<SearchFormHandle, SearchFormProps>(({ onSub
             ))}
           </select>
 
-          {/* City input */}
+          {/* City input — disabled when Nationwide */}
           <input
             type="text"
-            value={city}
+            value={isNationwide ? "" : city}
             onChange={(e) => setCity(e.target.value)}
             placeholder="City (optional)"
-            className="text-sm font-heading bg-secondary text-foreground rounded-lg px-3 py-1.5 w-36 placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
+            disabled={isNationwide}
+            className="text-sm font-heading bg-secondary text-foreground rounded-lg px-3 py-1.5 w-36 placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Enter city"
           />
 
