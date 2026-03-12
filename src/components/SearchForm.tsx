@@ -1,7 +1,7 @@
 import { useState, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, Languages, AlertTriangle } from "lucide-react";
-import { US_STATES } from "@/lib/us-states";
+import { US_STATES, NATIONWIDE_OPTION } from "@/lib/us-states";
 import { CategoryButtons } from "@/components/CategoryButtons";
 
 export interface SearchFormData {
@@ -30,13 +30,15 @@ export const SearchForm = forwardRef<SearchFormHandle, SearchFormProps>(({ onSub
   const [simplify, setSimplify] = useState(false);
   const [urgent, setUrgent] = useState(false);
 
+  const isNationwide = state === NATIONWIDE_OPTION.label;
+
   useImperativeHandle(ref, () => ({ setSituation }), []);
 
   const canSubmit = situation.trim().length > 0 && state.length > 0 && !disabled;
 
   const handleSubmit = () => {
     if (!canSubmit) return;
-    onSubmit({ situation: situation.trim(), state, city: city.trim(), category, simplifyLanguage: simplify, urgent });
+    onSubmit({ situation: situation.trim(), state, city: isNationwide ? "" : city.trim(), category, simplifyLanguage: simplify, urgent });
     setSituation("");
     setCategory("");
   };
@@ -83,13 +85,14 @@ export const SearchForm = forwardRef<SearchFormHandle, SearchFormProps>(({ onSub
             ))}
           </select>
 
-          {/* City input */}
+          {/* City input — disabled when Nationwide */}
           <input
             type="text"
-            value={city}
+            value={isNationwide ? "" : city}
             onChange={(e) => setCity(e.target.value)}
             placeholder="City (optional)"
-            className="text-sm font-heading bg-secondary text-foreground rounded-lg px-3 py-1.5 w-36 placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
+            disabled={isNationwide}
+            className="text-sm font-heading bg-secondary text-foreground rounded-lg px-3 py-1.5 w-36 placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Enter city"
           />
 

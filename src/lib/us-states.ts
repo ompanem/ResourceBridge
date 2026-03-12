@@ -1,4 +1,7 @@
+export const NATIONWIDE_OPTION = { value: "US", label: "Nationwide (U.S.)" } as const;
+
 export const US_STATES = [
+  NATIONWIDE_OPTION,
   { value: "AL", label: "Alabama" },
   { value: "AK", label: "Alaska" },
   { value: "AZ", label: "Arizona" },
