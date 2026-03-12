@@ -1,7 +1,7 @@
 import { useState, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, Languages, AlertTriangle } from "lucide-react";
-import { US_STATES } from "@/lib/us-states";
+import { US_STATES, NATIONWIDE_OPTION } from "@/lib/us-states";
 import { CategoryButtons } from "@/components/CategoryButtons";
 
 export interface SearchFormData {
