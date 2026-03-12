@@ -36,10 +36,14 @@ const Index = () => {
   }, [messages, isLoading, scrollToBottom]);
 
   const handleSubmit = async (formData: SearchFormData) => {
+    const locationLabel = formData.state
+      ? formData.city ? `${formData.city}, ${formData.state}` : formData.state
+      : null;
     const userMsg: ChatMessage = {
       id: nextId(),
       role: "user",
-      content: `${formData.situation}${formData.state ? ` (${formData.state}${formData.city ? `, ${formData.city}` : ""})` : ""}`,
+      content: formData.situation,
+      location: locationLabel,
     };
     const assistantId = nextId();
     setMessages((prev) => [...prev, userMsg, { id: assistantId, role: "assistant", isLoading: true }]);
