@@ -331,9 +331,10 @@ nextSteps should focus on what to do RIGHT NOW.`;
           if (!r.urgencyLevel) r.urgencyLevel = "Long-Term Support";
           if (!Array.isArray(r.whatYouMayNeed)) r.whatYouMayNeed = [];
 
-          const { url, verified } = await validateLink(r.link as string | null | undefined);
+          const { url, verified, validationMethod } = await validateLink(r.link as string | null | undefined);
           r.link = url;
           r.isVerifiedLink = verified;
+          r.validationMethod = validationMethod;
         })
       );
     }
