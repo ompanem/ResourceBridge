@@ -176,28 +176,35 @@ serve(async (req) => {
     if (category) userPrompt += `\nCategory focus: ${category}`;
 
     let systemContent = SYSTEM_PROMPT;
-    if (state === "Nationwide (U.S.)" || !state) {
-      systemContent += `\n\nThe user is looking for U.S.-wide, national, federal, or online resources. Do NOT assume a specific state. Prioritize federal programs, national nonprofits, and online services. Only mention a state if the user explicitly named one in their message.`;
-    } else {
-      systemContent += `\n\nThe user is located in ${state}${city ? `, ${city}` : ""}. Prioritize local resources in or near this area.`;
-    }
+
+    const isNationwide = state === "Nationwide (U.S.)" || !state;
+    const locationContext = isNationwide
+      ? `The user is looking for U.S.-wide, national, federal, or online resources. Do NOT assume a specific state. Only mention a state if the user explicitly named one in their message.`
+      : `The user is located in ${state}${city ? `, ${city}` : ""}. Prefer local resources in or near this area when possible.`;
+
     if (simplifyLanguage) {
       systemContent += `\n\nIMPORTANT: Use very simple words, short sentences, and a 5th-grade reading level. Avoid jargon and complex terms. Be extra clear and direct.`;
     }
+
     if (urgent) {
-      systemContent += `\n\nURGENT MODE — CRITICAL:
-- The user needs help RIGHT NOW, today, or within 24 hours.
-- You MUST provide a "startHere" field: a single clear sentence telling the user the #1 immediate action to take right now.
-- Order resources by speed of access:
-  Priority 1: Immediate contact — 24/7 hotlines, crisis lines (urgencyLevel: "Immediate Help")
-  Priority 2: Same-day walk-in services — food pantries, shelters, clinics (urgencyLevel: "Same-Day Help")
-  Priority 3: Short-term regional programs — food banks, distribution events (urgencyLevel: "Short-Term Support")
-  Priority 4: Long-term application-based programs — SNAP, housing (urgencyLevel: "Long-Term Support")
-- For each resource, mention in the description HOW QUICKLY help is available.
-- Prefer local same-day options over national programs with longer processes.
-- nextSteps should focus on what to do RIGHT NOW.`;
+      systemContent += `\n\nLOCATION CONTEXT: ${locationContext}`;
+      systemContent += `\n\nURGENT MODE — THIS OVERRIDES LOCATION RANKING:
+The PRIMARY sort key is urgency/speed of help. Location relevance is SECONDARY (used only to break ties within the same urgency tier).
+
+RANKING ORDER (strictly enforced):
+  Tier 1: "Immediate Help" — 24/7 hotlines, crisis lines, call-right-now services
+  Tier 2: "Same-Day Help" — walk-in pantries, shelters, clinics open today
+  Tier 3: "Short-Term Support" — food banks, distribution events available within days
+  Tier 4: "Long-Term Support" — SNAP, housing programs, training requiring applications
+
+Within each tier, prefer: Local > Statewide > National > Online.
+${isNationwide ? "Since the user selected Nationwide, tiers will naturally have more National/Online resources, but a National Immediate Help resource MUST still rank above a Long-Term Support resource." : ""}
+
+You MUST provide a "startHere" field: one clear sentence with the #1 immediate action to take right now.
+For each resource, mention in the description HOW QUICKLY help is available.
+nextSteps should focus on what to do RIGHT NOW.`;
     } else {
-      systemContent += `\n\nSet startHere to null since this is not an urgent request.`;
+      systemContent += `\n\n${locationContext}${isNationwide ? " Prioritize federal programs, national nonprofits, and online services." : ""}\n\nSet startHere to null since this is not an urgent request.`;
     }
 
     const tools = buildTools(!!urgent);
