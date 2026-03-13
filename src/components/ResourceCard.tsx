@@ -44,7 +44,7 @@ export function ResourceCard({ resource, isSaved, onToggleSave }: ResourceCardPr
     <div className="rounded-xl border border-border bg-card p-5 space-y-3 animate-fade-in">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1.5 min-w-0">
-          <h3 className="font-heading font-semibold text-foreground text-base leading-tight">{resource.name}</h3>
+          <h3 className="font-heading font-bold text-foreground text-lg leading-tight">{resource.name || "Resource"}</h3>
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="secondary" className="text-xs font-heading">{resource.category}</Badge>
             {resource.relevanceLevel && (
