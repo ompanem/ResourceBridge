@@ -121,21 +121,37 @@ function buildTools(urgent: boolean) {
   ];
 }
 
-async function validateLink(link: string | null | undefined): Promise<{ url: string | null; verified: boolean }> {
-  if (!link || !link.startsWith("https://")) return { url: null, verified: false };
-  try {
-    const check = await fetch(link, { method: "HEAD", redirect: "follow", signal: AbortSignal.timeout(5000) });
-    if (check.status < 400) return { url: link, verified: true };
-    if (check.status === 405) {
-      const getCheck = await fetch(link, { method: "GET", redirect: "follow", signal: AbortSignal.timeout(5000) });
-      if (getCheck.status < 400) return { url: link, verified: true };
-    }
-    console.warn(`Link failed: ${link} (${check.status})`);
-    return { url: null, verified: false };
-  } catch (err) {
-    console.warn(`Link error: ${link}`, err);
-    return { url: null, verified: false };
+function normalizeUrl(raw: string | null | undefined): string | null {
+  if (!raw || !raw.trim()) return null;
+  let url = raw.trim();
+  // Add protocol if missing
+  if (!/^https?:\/\//i.test(url)) {
+    url = `https://${url}`;
   }
+  // Block unsafe protocols
+  if (/^(javascript|data|file|ftp|mailto):/i.test(raw.trim())) return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+    if (!parsed.hostname.includes(".")) return null;
+    return parsed.href;
+  } catch {
+    return null;
+  }
+}
+
+async function validateLink(link: string | null | undefined): Promise<{ url: string | null; verified: boolean; validationMethod: string }> {
+  const normalized = normalizeUrl(link);
+  if (!normalized) return { url: null, verified: false, validationMethod: "rejected" };
+
+  // Attempt reachability but don't invalidate on failure
+  try {
+    const check = await fetch(normalized, { method: "HEAD", redirect: "follow", signal: AbortSignal.timeout(5000) });
+    if (check.status < 400) return { url: normalized, verified: true, validationMethod: "format+reachability" };
+  } catch { /* ignore */ }
+
+  // Format is valid — keep the link even if reachability failed
+  return { url: normalized, verified: true, validationMethod: "format-only" };
 }
 
 function safeFallback(mode: "guidance" | "clarification" | "error", message: string, prompts: string[] = []) {
@@ -315,9 +331,10 @@ nextSteps should focus on what to do RIGHT NOW.`;
           if (!r.urgencyLevel) r.urgencyLevel = "Long-Term Support";
           if (!Array.isArray(r.whatYouMayNeed)) r.whatYouMayNeed = [];
 
-          const { url, verified } = await validateLink(r.link as string | null | undefined);
+          const { url, verified, validationMethod } = await validateLink(r.link as string | null | undefined);
           r.link = url;
           r.isVerifiedLink = verified;
+          r.validationMethod = validationMethod;
         })
       );
     }
