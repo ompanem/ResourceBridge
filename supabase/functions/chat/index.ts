@@ -198,8 +198,14 @@ serve(async (req) => {
 
   try {
     const { situation, state, city, category, simplifyLanguage, urgent } = await req.json();
+    // Server-only: do not expose this key to the client. Do not log secret values.
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) {
+      console.error("Missing required server environment variable");
+      return new Response(JSON.stringify(safeFallback("error", "Service configuration error. Please try again later.")), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Empty input check
     if (!situation || !situation.trim()) {
