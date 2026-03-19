@@ -357,6 +357,28 @@ nextSteps should focus on what to do RIGHT NOW.`;
           r.validationMethod = validationMethod;
         })
       );
+
+      // Deterministic sorting
+      const urgencyRank: Record<string, number> = {
+        "Immediate Help": 4,
+        "Same-Day Help": 3,
+        "Short-Term Support": 2,
+        "Long-Term Support": 1,
+      };
+      const relevanceRank: Record<string, number> = {
+        Local: 4,
+        Statewide: 3,
+        National: 2,
+        Online: 1,
+      };
+
+      parsed.resources.sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+        if (urgent) {
+          const uDiff = (urgencyRank[b.urgencyLevel as string] ?? 0) - (urgencyRank[a.urgencyLevel as string] ?? 0);
+          if (uDiff !== 0) return uDiff;
+        }
+        return (relevanceRank[b.relevanceLevel as string] ?? 0) - (relevanceRank[a.relevanceLevel as string] ?? 0);
+      });
     }
 
     return new Response(JSON.stringify({
