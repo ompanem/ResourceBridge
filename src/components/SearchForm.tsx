@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUp, Languages, AlertTriangle } from "lucide-react";
 import { US_STATES, NATIONWIDE_OPTION } from "@/lib/us-states";
 import { CategoryButtons } from "@/components/CategoryButtons";
+import { validateCityState } from "@/lib/city-state-map";
 
 export interface SearchFormData {
   situation: string;
@@ -29,14 +30,34 @@ export const SearchForm = forwardRef<SearchFormHandle, SearchFormProps>(({ onSub
   const [category, setCategory] = useState("");
   const [simplify, setSimplify] = useState(false);
   const [urgent, setUrgent] = useState(false);
+  const [cityError, setCityError] = useState("");
 
   const isNationwide = state === NATIONWIDE_OPTION.label;
 
   useImperativeHandle(ref, () => ({ setSituation }), []);
 
-  const canSubmit = situation.trim().length > 0 && state.length > 0 && !disabled;
+  const canSubmit = situation.trim().length > 0 && state.length > 0 && !disabled && !cityError;
+
+  const handleCityChange = (value: string) => {
+    setCity(value);
+    setCityError("");
+  };
+
+  const handleStateChange = (value: string) => {
+    setState(value);
+    setCityError("");
+    if (value === NATIONWIDE_OPTION.label) setCity("");
+  };
 
   const handleSubmit = () => {
+    // Validate city/state before submitting
+    if (!isNationwide && city.trim()) {
+      const result = validateCityState(city.trim(), state);
+      if (result === "invalid") {
+        setCityError(`"${city.trim()}" doesn't appear to be in ${state}. Please correct the city or clear it to search statewide.`);
+        return;
+      }
+    }
     if (!canSubmit) return;
     onSubmit({ situation: situation.trim(), state, city: isNationwide ? "" : city.trim(), category, simplifyLanguage: simplify, urgent });
     setSituation("");
@@ -75,7 +96,7 @@ export const SearchForm = forwardRef<SearchFormHandle, SearchFormProps>(({ onSub
           {/* State select */}
           <select
             value={state}
-            onChange={(e) => setState(e.target.value)}
+            onChange={(e) => handleStateChange(e.target.value)}
             className="text-sm font-heading bg-secondary text-foreground rounded-lg px-3 py-1.5 border-none focus:outline-none focus:ring-1 focus:ring-primary/30"
             aria-label="Select state"
           >
@@ -86,15 +107,20 @@ export const SearchForm = forwardRef<SearchFormHandle, SearchFormProps>(({ onSub
           </select>
 
           {/* City input — disabled when Nationwide */}
-          <input
-            type="text"
-            value={isNationwide ? "" : city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder="City (optional)"
-            disabled={isNationwide}
-            className="text-sm font-heading bg-secondary text-foreground rounded-lg px-3 py-1.5 w-36 placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-40 disabled:cursor-not-allowed"
-            aria-label="Enter city"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={isNationwide ? "" : city}
+              onChange={(e) => handleCityChange(e.target.value)}
+              placeholder="City (optional)"
+              disabled={isNationwide}
+              className={`text-sm font-heading bg-secondary text-foreground rounded-lg px-3 py-1.5 w-36 placeholder:text-muted-foreground focus:outline-none focus:ring-1 disabled:opacity-40 disabled:cursor-not-allowed ${
+                cityError ? "ring-1 ring-destructive focus:ring-destructive" : "focus:ring-primary/30"
+              }`}
+              aria-label="Enter city"
+              aria-invalid={!!cityError}
+            />
+          </div>
 
           {/* Simplify toggle */}
           <button
@@ -142,6 +168,11 @@ export const SearchForm = forwardRef<SearchFormHandle, SearchFormProps>(({ onSub
           </Button>
         </div>
       </div>
+
+      {/* City validation error */}
+      {cityError && (
+        <p className="text-xs text-destructive font-heading px-5 pb-2">{cityError}</p>
+      )}
 
       {/* Category chips */}
       <CategoryButtons
