@@ -1,73 +1,17 @@
-# Welcome to your Lovable project
+#ResourceBridge
+## Inspiration
+Many people who need help, whether it is for scholarships, food, etc., including me, might not know where to start to get the help they need.  Searching online always leads to sponsored results or irrelevant results, which can make it harder to actually find the help you need.
+## What it does
+ResourceBridge helps people find free support in their community for various issues.  The users of the web application will enter their needs, and the app will return relevant programs or organizations that are in the area, explain why they might help the user, and give them clear next steps for how to actually get that help.
+## How we built it
+I built this application using Lovable AI, which is an AI platform used for website development.  I prompted lovable to make the input flow in a way where users can describe their situation and get results based on their needs, and from there, I added a location field with the city and state so users can get results more relevant for the user.   I also added features like urgent mode, which would prioritize results based on how quickly the user can get help from them, and checks to handle unrelated inputs for the AI, for example, asking the AI what "1+1" is.   Most of my work was figuring out a way to prompt lovable and refining the prompt to be more specific so the app behaved consistently and gave useful results to the user. 
+## Challenges we ran into
+One of the biggest challenges while developing the app was that, although the AI would provide accurate and useful results based on the user's needs, the model sometimes generated incorrect or outdated links, making the AI unreliable under certain prompts.  To fix this problem, I added server-side link validation to the project to ensure that the suggested resources are valid; otherwise, they are removed from the list of suggested websites.   Another challenge was prioritizing urgent assistance when the user pressed the urgent assistance button.  Not all support programs give immediate help, so I had to ensure that emergency services and services that give same-day help appear first if the situation is urgent.
+## Accomplishments that we're proud of
+One thing I’m proud of for this project is that this website is actually usable in real-life situations.  Instead of returning generic or sponsored resources with no elaboration, ResourceBridge actually explains why each resource is important and gives clear next steps on what the person should do to get the help they need.  I’m also proud of the systems built to make the results more reliable. For example, I added a city verification to handle cases where the city doesn’t exist in the state.  Instead of generating incorrect information, the AI will prevent invalid searches by showing an error message and asking the user to reprompt it.  Features like this really helped maintain the accuracy of recommendations and prevent the model from giving the user misleading information.
+## What we learned
+I learnt how to develop detailed prompts to ensure that the project behaves correctly.  I also learnt more about the importance of edge cases, like API keys not getting leaked, and making sure the links are valid and reliable.  I also learnt how important it is to address small issues.  Things like the ordering of resources, handling unrelated inputs, and prioritizing urgent results can make a huge difference in whether the app actually feels helpful for the person using it.
+## What's next for ResourceBridge
+I feel the next step for ResourceBridge is to make the project more wide-scale. Right now, the app is focused on helping people find relevant resources within the U.S., which helped me build a more accurate and consistent version first.  The next step for this project is going to be expanding the project globally so more people can benefit from it, regardless of where they live.  
 
-## Project info
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
