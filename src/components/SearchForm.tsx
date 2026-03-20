@@ -30,14 +30,34 @@ export const SearchForm = forwardRef<SearchFormHandle, SearchFormProps>(({ onSub
   const [category, setCategory] = useState("");
   const [simplify, setSimplify] = useState(false);
   const [urgent, setUrgent] = useState(false);
+  const [cityError, setCityError] = useState("");
 
   const isNationwide = state === NATIONWIDE_OPTION.label;
 
   useImperativeHandle(ref, () => ({ setSituation }), []);
 
-  const canSubmit = situation.trim().length > 0 && state.length > 0 && !disabled;
+  const canSubmit = situation.trim().length > 0 && state.length > 0 && !disabled && !cityError;
+
+  const handleCityChange = (value: string) => {
+    setCity(value);
+    setCityError("");
+  };
+
+  const handleStateChange = (value: string) => {
+    setState(value);
+    setCityError("");
+    if (value === NATIONWIDE_OPTION.label) setCity("");
+  };
 
   const handleSubmit = () => {
+    // Validate city/state before submitting
+    if (!isNationwide && city.trim()) {
+      const result = validateCityState(city.trim(), state);
+      if (result === "invalid") {
+        setCityError(`"${city.trim()}" doesn't appear to be in ${state}. Please correct the city or clear it to search statewide.`);
+        return;
+      }
+    }
     if (!canSubmit) return;
     onSubmit({ situation: situation.trim(), state, city: isNationwide ? "" : city.trim(), category, simplifyLanguage: simplify, urgent });
     setSituation("");
