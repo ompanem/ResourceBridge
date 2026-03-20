@@ -96,7 +96,7 @@ export const SearchForm = forwardRef<SearchFormHandle, SearchFormProps>(({ onSub
           {/* State select */}
           <select
             value={state}
-            onChange={(e) => setState(e.target.value)}
+            onChange={(e) => handleStateChange(e.target.value)}
             className="text-sm font-heading bg-secondary text-foreground rounded-lg px-3 py-1.5 border-none focus:outline-none focus:ring-1 focus:ring-primary/30"
             aria-label="Select state"
           >
@@ -107,15 +107,20 @@ export const SearchForm = forwardRef<SearchFormHandle, SearchFormProps>(({ onSub
           </select>
 
           {/* City input — disabled when Nationwide */}
-          <input
-            type="text"
-            value={isNationwide ? "" : city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder="City (optional)"
-            disabled={isNationwide}
-            className="text-sm font-heading bg-secondary text-foreground rounded-lg px-3 py-1.5 w-36 placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-40 disabled:cursor-not-allowed"
-            aria-label="Enter city"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={isNationwide ? "" : city}
+              onChange={(e) => handleCityChange(e.target.value)}
+              placeholder="City (optional)"
+              disabled={isNationwide}
+              className={`text-sm font-heading bg-secondary text-foreground rounded-lg px-3 py-1.5 w-36 placeholder:text-muted-foreground focus:outline-none focus:ring-1 disabled:opacity-40 disabled:cursor-not-allowed ${
+                cityError ? "ring-1 ring-destructive focus:ring-destructive" : "focus:ring-primary/30"
+              }`}
+              aria-label="Enter city"
+              aria-invalid={!!cityError}
+            />
+          </div>
 
           {/* Simplify toggle */}
           <button
