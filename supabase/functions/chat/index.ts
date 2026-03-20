@@ -219,10 +219,17 @@ serve(async (req) => {
 
     let systemContent = SYSTEM_PROMPT;
 
+    // Backend safety: validate city belongs to stated state (lightweight check)
+    // If city seems invalid for the state, drop it and use state-only
+    let safeCity = city;
     const isNationwide = state === "Nationwide (U.S.)" || !state;
+    if (!isNationwide && safeCity) {
+      // Quick sanity check via AI prompt context — tell the model not to use city if it doesn't match
+      systemContent += `\n\nIMPORTANT LOCATION VALIDATION: The user selected state "${state}" and entered city "${safeCity}". If "${safeCity}" is NOT actually located in ${state}, IGNORE the city entirely. Use ONLY the state for location context. Do NOT fabricate local resources for a city that doesn't exist in the selected state.`;
+    }
     const locationContext = isNationwide
       ? `The user is looking for U.S.-wide, national, federal, or online resources. Do NOT assume a specific state. Only mention a state if the user explicitly named one in their message.`
-      : `The user is located in ${state}${city ? `, ${city}` : ""}. Prefer local resources in or near this area when possible.`;
+      : `The user is located in ${state}${safeCity ? `, ${safeCity}` : ""}. Prefer local resources in or near this area when possible.`;
 
     if (simplifyLanguage) {
       systemContent += `\n\nIMPORTANT: Use very simple words, short sentences, and a 5th-grade reading level. Avoid jargon and complex terms. Be extra clear and direct.`;

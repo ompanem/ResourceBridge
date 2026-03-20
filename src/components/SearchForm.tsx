@@ -169,6 +169,11 @@ export const SearchForm = forwardRef<SearchFormHandle, SearchFormProps>(({ onSub
         </div>
       </div>
 
+      {/* City validation error */}
+      {cityError && (
+        <p className="text-xs text-destructive font-heading px-5 pb-2">{cityError}</p>
+      )}
+
       {/* Category chips */}
       <CategoryButtons
         onSelect={handleCategorySelect}
