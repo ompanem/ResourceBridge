@@ -53,7 +53,7 @@ const CITY_STATE_MAP: Record<string, string[]> = {
   "new york city": ["New York"],
   "new york": ["New York"],
   "buffalo": ["New York"],
-  "rochester": ["New York"],
+  "rochester": ["New York", "Minnesota"],
   "albany": ["New York"],
   "syracuse": ["New York"],
   "yonkers": ["New York"],
