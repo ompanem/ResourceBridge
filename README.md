@@ -1,4 +1,4 @@
-#ResourceBridge
+# ResourceBridge
 ## Inspiration
 Many people who need help, whether it is for scholarships, food, etc., including me, might not know where to start to get the help they need.  Searching online always leads to sponsored results or irrelevant results, which can make it harder to actually find the help you need.
 ## What it does
