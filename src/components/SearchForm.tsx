@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUp, Languages, AlertTriangle } from "lucide-react";
 import { US_STATES, NATIONWIDE_OPTION } from "@/lib/us-states";
 import { CategoryButtons } from "@/components/CategoryButtons";
+import { validateCityState } from "@/lib/city-state-map";
 
 export interface SearchFormData {
   situation: string;
