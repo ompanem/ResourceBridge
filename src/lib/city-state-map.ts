@@ -267,8 +267,7 @@ const CITY_STATE_MAP: Record<string, string[]> = {
   "billings": ["Montana"],
   "missoula": ["Montana"],
 
-  // Maine
-  "portland": ["Maine", "Oregon"],
+  // portland already defined above with ["Oregon", "Maine"]
 
   // North Dakota
   "fargo": ["North Dakota"],
