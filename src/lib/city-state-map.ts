@@ -184,10 +184,10 @@ const CITY_STATE_MAP: Record<string, string[]> = {
   "bridgeport": ["Connecticut"],
 
   // Virginia
+  // arlington already defined above with ["Texas", "Virginia"]
   "richmond": ["Virginia"],
   "virginia beach": ["Virginia"],
   "norfolk": ["Virginia"],
-  "arlington": ["Virginia", "Texas"],
   "alexandria": ["Virginia"],
 
   // Alabama
