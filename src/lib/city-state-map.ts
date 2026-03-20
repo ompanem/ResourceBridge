@@ -153,7 +153,7 @@ const CITY_STATE_MAP: Record<string, string[]> = {
   "st. paul": ["Minnesota"],
   "saint paul": ["Minnesota"],
   "duluth": ["Minnesota"],
-  "rochester": ["New York", "Minnesota"],
+  // rochester already defined above with ["New York", "Minnesota"]
   "saint louis": ["Missouri"],
   "kansas city": ["Missouri", "Kansas"],
 
