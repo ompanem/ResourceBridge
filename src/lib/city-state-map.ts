@@ -12,7 +12,7 @@ const CITY_STATE_MAP: Record<string, string[]> = {
   "san antonio": ["Texas"],
   "fort worth": ["Texas"],
   "el paso": ["Texas"],
-  "arlington": ["Texas"],
+  "arlington": ["Texas", "Virginia"],
   "plano": ["Texas"],
   "mckinney": ["Texas"],
   "lubbock": ["Texas"],
