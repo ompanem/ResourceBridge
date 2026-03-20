@@ -277,8 +277,7 @@ const CITY_STATE_MAP: Record<string, string[]> = {
   "sioux falls": ["South Dakota"],
   "rapid city": ["South Dakota"],
 
-  // West Virginia
-  "charleston": ["West Virginia", "South Carolina"],
+  // charleston already defined above with ["South Carolina", "West Virginia"]
 
   // Wyoming
   "cheyenne": ["Wyoming"],
