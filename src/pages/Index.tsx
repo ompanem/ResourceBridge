@@ -88,9 +88,9 @@ const Index = () => {
 
   const examplePrompts = [
     "My family needs groceries",
-    "I'm looking for scholarships",
-    "I need mental health support",
-    "I need help paying rent this month",
+    "Scholarships",
+    "Mental health support",
+    "Help paying rent",
   ];
 
   return (
