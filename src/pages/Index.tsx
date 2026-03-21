@@ -86,13 +86,6 @@ const Index = () => {
 
   const hasMessages = messages.length > 0;
 
-  const examplePrompts = [
-    "My family needs groceries",
-    "Scholarships",
-    "Mental health support",
-    "Help paying rent",
-  ];
-
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
@@ -100,7 +93,7 @@ const Index = () => {
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="font-heading font-bold text-xl text-foreground tracking-tight">ResourceBridge</h1>
-            <p className="text-xs text-muted-foreground font-heading">Find free help near you in minutes.</p>
+            <p className="text-xs text-muted-foreground font-heading">Find support resources tailored to your situation.</p>
           </div>
           <div className="flex items-center gap-1">
             <Button
@@ -126,9 +119,9 @@ const Index = () => {
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-5 md:px-8 py-8">
           {!hasMessages && (
-            <div className="flex flex-col items-center justify-center min-h-[45vh] gap-4 animate-fade-in">
-              <div className="text-center space-y-2 max-w-md">
-                <h2 className="font-heading font-bold text-2xl md:text-3xl text-foreground tracking-tight">
+            <div className="flex flex-col items-center justify-center min-h-[50vh] gap-6 animate-fade-in">
+              <div className="text-center space-y-3 max-w-md">
+                <h2 className="font-heading font-bold text-2xl md:text-3xl text-foreground">
                   How can we help?
                 </h2>
                 <p className="font-body text-muted-foreground text-base leading-relaxed">
@@ -200,26 +193,8 @@ const Index = () => {
 
       {/* Input */}
       <div className="flex-shrink-0 border-t border-border bg-background/80 backdrop-blur-sm">
-        <div className="max-w-3xl mx-auto px-5 md:px-8 py-4 space-y-2">
+        <div className="max-w-3xl mx-auto px-5 md:px-8 py-4">
           <SearchForm ref={searchFormRef} onSubmit={handleSubmit} disabled={isLoading} />
-
-          {/* Minimal example prompts — only on landing */}
-          {!hasMessages && (
-            <p className="text-center text-[11px] text-muted-foreground/60 font-heading">
-              {examplePrompts.map((p, i) => (
-                <span key={p}>
-                  <button
-                    type="button"
-                    onClick={() => searchFormRef.current?.setSituation(p)}
-                    className="hover:text-muted-foreground transition-colors"
-                  >
-                    {p}
-                  </button>
-                  {i < examplePrompts.length - 1 && <span className="mx-1.5">·</span>}
-                </span>
-              ))}
-            </p>
-          )}
         </div>
       </div>
 
