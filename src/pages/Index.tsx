@@ -88,9 +88,9 @@ const Index = () => {
 
   const examplePrompts = [
     "My family needs groceries",
-    "I'm looking for scholarships",
-    "I need mental health support",
-    "I need help paying rent this month",
+    "Scholarships",
+    "Mental health support",
+    "Help paying rent",
   ];
 
   return (
@@ -126,14 +126,9 @@ const Index = () => {
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-5 md:px-8 py-8">
           {!hasMessages && (
-            <div className="relative flex flex-col items-center justify-center min-h-[40vh] gap-4 animate-fade-in">
-              {/* Subtle radial glow */}
-              <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/[0.04] blur-3xl" />
-              </div>
-
-              <div className="text-center space-y-2 max-w-md relative z-10">
-                <h2 className="font-heading font-bold text-3xl md:text-4xl text-foreground tracking-tight">
+            <div className="flex flex-col items-center justify-center min-h-[45vh] gap-4 animate-fade-in">
+              <div className="text-center space-y-2 max-w-md">
+                <h2 className="font-heading font-bold text-2xl md:text-3xl text-foreground tracking-tight">
                   How can we help?
                 </h2>
                 <p className="font-body text-muted-foreground text-base leading-relaxed">
@@ -205,38 +200,25 @@ const Index = () => {
 
       {/* Input */}
       <div className="flex-shrink-0 border-t border-border bg-background/80 backdrop-blur-sm">
-        <div className="max-w-3xl mx-auto px-5 md:px-8 py-4 space-y-3">
+        <div className="max-w-3xl mx-auto px-5 md:px-8 py-4 space-y-2">
           <SearchForm ref={searchFormRef} onSubmit={handleSubmit} disabled={isLoading} />
 
-          {/* Example prompts — only on landing */}
+          {/* Minimal example prompts — only on landing */}
           {!hasMessages && (
-            <div className="flex flex-wrap items-center gap-2 justify-center">
-              <span className="text-xs text-muted-foreground font-heading">Try:</span>
-              {examplePrompts.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => searchFormRef.current?.setSituation(p)}
-                  className="text-xs font-heading text-muted-foreground hover:text-foreground px-3 py-1 rounded-full border border-border hover:border-primary/40 transition-colors"
-                >
-                  {p}
-                </button>
+            <p className="text-center text-[11px] text-muted-foreground/60 font-heading">
+              {examplePrompts.map((p, i) => (
+                <span key={p}>
+                  <button
+                    type="button"
+                    onClick={() => searchFormRef.current?.setSituation(p)}
+                    className="hover:text-muted-foreground transition-colors"
+                  >
+                    {p}
+                  </button>
+                  {i < examplePrompts.length - 1 && <span className="mx-1.5">·</span>}
+                </span>
               ))}
-            </div>
-          )}
-
-          {/* Sample preview card — only on landing */}
-          {!hasMessages && (
-            <div className="flex justify-center pt-2">
-              <div className="w-full max-w-sm rounded-xl border border-border bg-card/60 p-4 opacity-40 select-none pointer-events-none">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-[10px] font-heading font-semibold uppercase tracking-wider text-primary">Example Result</span>
-                </div>
-                <p className="font-heading font-semibold text-sm text-foreground">Frisco Family Services</p>
-                <p className="text-xs text-muted-foreground font-heading mt-0.5">Local • Same-Day Help</p>
-                <p className="text-xs text-muted-foreground font-body mt-1">Food Pantry &amp; Crisis Support</p>
-              </div>
-            </div>
+            </p>
           )}
         </div>
       </div>
