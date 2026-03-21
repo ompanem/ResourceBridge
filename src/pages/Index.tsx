@@ -126,14 +126,9 @@ const Index = () => {
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-5 md:px-8 py-8">
           {!hasMessages && (
-            <div className="relative flex flex-col items-center justify-center min-h-[40vh] gap-4 animate-fade-in">
-              {/* Subtle radial glow */}
-              <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/[0.04] blur-3xl" />
-              </div>
-
-              <div className="text-center space-y-2 max-w-md relative z-10">
-                <h2 className="font-heading font-bold text-3xl md:text-4xl text-foreground tracking-tight">
+            <div className="flex flex-col items-center justify-center min-h-[45vh] gap-4 animate-fade-in">
+              <div className="text-center space-y-2 max-w-md">
+                <h2 className="font-heading font-bold text-2xl md:text-3xl text-foreground tracking-tight">
                   How can we help?
                 </h2>
                 <p className="font-body text-muted-foreground text-base leading-relaxed">
