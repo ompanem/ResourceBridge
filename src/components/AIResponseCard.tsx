@@ -12,13 +12,15 @@ export function AIResponseCard({ data, isSaved, onToggleSave }: AIResponseCardPr
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Situation summary */}
-      <div className="rounded-xl bg-parchment p-5">
-        <h3 className="font-heading font-semibold text-foreground text-sm mb-1">Situation Summary</h3>
-        <p className="font-body text-foreground text-[15px] leading-relaxed">{data.situationSummary}</p>
-      </div>
+      {data.situationSummary && data.situationSummary.trim() !== "" && (
+        <div className="rounded-xl bg-parchment p-5">
+          <h3 className="font-heading font-semibold text-foreground text-sm mb-1">Situation Summary</h3>
+          <p className="font-body text-foreground text-[15px] leading-relaxed">{data.situationSummary}</p>
+        </div>
+      )}
 
       {/* Start Here — urgent callout */}
-      {data.startHere && (
+      {data.startHere && data.startHere.trim() !== "" && (
         <div className="rounded-xl border-2 border-destructive/30 bg-destructive/5 p-5 flex gap-3 items-start">
           <AlertTriangle className="size-5 text-destructive flex-shrink-0 mt-0.5" />
           <div>
