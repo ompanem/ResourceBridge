@@ -36,7 +36,7 @@ export async function fetchResources(req: ChatRequest): Promise<AIResponse> {
   // Normalize to safe defaults
   return {
     mode: data.mode || "resources",
-    message: data.message ?? null,
+    message: data.message && String(data.message).trim() ? data.message : null,
     situationSummary: data.situationSummary ?? null,
     startHere: data.startHere ?? null,
     resources: Array.isArray(data.resources) ? data.resources : [],
