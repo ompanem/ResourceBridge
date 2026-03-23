@@ -18,7 +18,7 @@ export function AIResponseCard({ data, isSaved, onToggleSave }: AIResponseCardPr
       </div>
 
       {/* Start Here — urgent callout */}
-      {data.startHere && (
+      {data.startHere && data.startHere.trim() !== "" && (
         <div className="rounded-xl border-2 border-destructive/30 bg-destructive/5 p-5 flex gap-3 items-start">
           <AlertTriangle className="size-5 text-destructive flex-shrink-0 mt-0.5" />
           <div>
